@@ -134,7 +134,7 @@ function App() {
     setCapturedImage(null); // Clear captured image when form closes
   };
 
-  // Google Sign-in function
+  // Google Sign-in function - This function is no longer called from the UI
   const handleGoogleSignIn = async () => {
     if (!auth) {
       console.error("Firebase Auth is not initialized.");
@@ -394,20 +394,12 @@ function App() {
             onClick={toggleDropdown}
             title={user ? user.displayName || user.email : "Menu"}
           >
-            {user && user.photoURL ? (
-              <img
-                src={user.photoURL}
-                alt="User Profile"
-                className="w-full h-full object-cover"
-                onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/48x48/000000/FFFFFF?text=User'; }} // Fallback for broken image
-              />
-            ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                <circle cx="12" cy="5" r="2"/>
-                <circle cx="12" cy="12" r="2"/>
-                <circle cx="12" cy="19" r="2"/>
-              </svg>
-            )}
+            {/* Always display the three dots icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <circle cx="12" cy="5" r="2"/>
+              <circle cx="12" cy="12" r="2"/>
+              <circle cx="12" cy="19" r="2"/>
+            </svg>
           </div>
 
           {/* Dropdown Menu */}
@@ -429,14 +421,8 @@ function App() {
                     </li>
                   </>
                 ) : (
-                  <li className="flex items-center space-x-3 cursor-pointer hover:text-gray-300 transition-colors duration-200 px-3 py-2" onClick={handleGoogleSignIn}>
-                    {/* Google Sign-in Icon */}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.24 10.29v2.42h6.66c-.28 1.57-1.14 2.87-2.48 3.73l-.01.01-2.07 1.6L12 18.01c-3.14-2.88-5.1-7.14-5.1-11.91 0-.91.1-1.8.28-2.65h-.01L4.3 2.59l-.01.01C2.78 4.67 2 7.03 2 9.5c0 4.96 2.9 9.3 7.15 11.24l.01-.01 2.84-2.22.01-.01c.78-.61 1.4-1.38 1.84-2.25z"/>
-                      <path d="M22.25 10.29h-9.96v-2.42h9.96c.01.27.02.54.02.82 0 2.22-.72 4.28-1.95 5.96l-.01.01-2.07-1.6c.72-1.07 1.14-2.38 1.14-3.78z"/>
-                    </svg>
-                    <span>Sign in with Google</span>
-                  </li>
+                  // No "Not Logged In" message
+                  <></>
                 )}
                 <li className="flex items-center space-x-3 cursor-pointer hover:text-gray-300 transition-colors duration-200 px-3 py-2" onClick={openFeedbackForm}>
                   {/* Icon for Send app feedback */}
