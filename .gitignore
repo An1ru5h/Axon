@@ -15,3 +15,4 @@ build/
 # Do NOT ignore config files like these
 # tailwind.config.js
 # postcss.config.js
+.vercel
