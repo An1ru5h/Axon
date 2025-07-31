@@ -16,3 +16,5 @@ build/
 # tailwind.config.js
 # postcss.config.js
 .vercel
+node_modules
+node_modules
