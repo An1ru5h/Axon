@@ -113,6 +113,11 @@ function App() {
 
   return (
     <>
+      {/*
+        Important note for responsiveness: Ensure your main HTML file includes the following meta tag
+        in the <head> section for optimal mobile viewing:
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Urbanist:wght@400;700&display=swap');
         @import url('https://fonts.com/css2?family=Caveat:wght@400;700&display=swap');
@@ -288,7 +293,8 @@ function App() {
         </video>
 
         <main className="z-10 flex flex-col items-center w-full">
-          <h1 className="text-9xl md:text-[10rem] font-normal mb-2 leading-tight gradient-text-header text-center animate-slide-in-up">
+          {/* Changed text-6xl to text-7xl for mobile, and added md:text-9xl and lg:text-[10rem] for larger screens */}
+          <h1 className="text-7xl md:text-9xl lg:text-[10rem] font-normal mb-2 leading-tight gradient-text-header text-center animate-slide-in-up">
             Axon
           </h1>
           {/* Tagline with reduced font size and mb-0 */}
@@ -313,7 +319,7 @@ function App() {
         </div>
 
         {/* Icons moved to the top-right corner */}
-        <div className="fixed top-4 right-4 z-20 flex items-center space-x-4"> {/* Changed right-20 to right-4 */}
+        <div className="fixed top-4 right-4 z-20 flex items-center space-x-4">
           {/*Discord icon*/}
           <div className="flex items-center justify-center w-10 h-10 rounded-md">
             <a href="https://discord.gg/SvxwVpJ2" target="_blank" rel="noopener noreferrer" aria-label="Visit us on Discord">
@@ -349,7 +355,7 @@ function App() {
         />
 
         {/* "Product under Development" and "Send Feedbacks" text at the bottom */}
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 text-gray-400 text-sm md:text-base flex items-center space-x-2">
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 text-gray-400 text-sm md:text-base flex items-center space-x-2 whitespace-nowrap">
           <span>Product under Development</span>
           <span className="text-gray-500">|</span>
           <span className="underline cursor-pointer" onClick={openFeedbackForm}>Send Feedbacks</span>
