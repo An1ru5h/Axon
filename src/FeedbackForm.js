@@ -1,43 +1,69 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
+import { db } from './firebase'; // your Firebase config
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
-const FeedbackForm = ({ showFeedbackForm, closeFeedbackForm, capturedImage, setCapturedImage }) => {
+const FeedbackForm = ({ showFeedbackForm, closeFeedbackForm }) => {
   const feedbackFormRef = useRef(null);
 
-  // Effect to handle clicks outside the feedback form
-  useEffect(() => {
-    function handleClickOutsideForm(event) {
-      if (feedbackFormRef.current && !feedbackFormRef.current.contains(event.target)) {
-        closeFeedbackForm();
-        setCapturedImage(null); // Clear captured image when form closes
-      }
+  const [feedbackText, setFeedbackText] = useState('');
+  const [emailUpdates, setEmailUpdates] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [feedbackSent, setFeedbackSent] = useState(false); // New state for feedback sent confirmation
+
+  const handleClickOutsideForm = (event) => {
+    if (feedbackFormRef.current && !feedbackFormRef.current.contains(event.target)) {
+      closeFeedbackForm();
+      setFeedbackSent(false); // Reset feedbackSent when form is closed
     }
+  };
+
+  useEffect(() => {
     document.addEventListener("mousedown", handleClickOutsideForm);
     return () => {
       document.removeEventListener("mousedown", handleClickOutsideForm);
     };
-  }, [feedbackFormRef, closeFeedbackForm, setCapturedImage]);
+  }, []);
 
-  // This function is passed from App.jsx to handle the screenshot capture
-  // and then update the capturedImage state in App.jsx
-  const handleCaptureScreenshot = async () => {
+  const handleSubmit = async () => {
+    if (!feedbackText.trim()) {
+      alert("Feedback is required."); // Using alert as per original code, consider a custom modal for better UX
+      return;
+    }
+
+    setIsSubmitting(true);
+    setFeedbackSent(false); // Ensure it's false at the start of submission
+
     try {
-      // html2canvas is loaded globally in App.jsx, so it should be available here
-      const canvas = await html2canvas(document.body, {
-        ignoreElements: (element) => {
-          return feedbackFormRef.current && feedbackFormRef.current.contains(element);
-        },
+      // Save feedback to Firestore
+      await addDoc(collection(db, "feedback"), {
+        text: feedbackText,
+        emailUpdates,
+        createdAt: serverTimestamp(),
       });
-      setCapturedImage(canvas.toDataURL('image/png'));
+
+      setFeedbackSent(true); // Set to true on successful submission
+      // Optionally reset form fields after a short delay or immediately
+      setFeedbackText("");
+      setEmailUpdates(false);
+
+      // Automatically reset feedbackSent and allow new submissions after a short delay
+      setTimeout(() => {
+        setFeedbackSent(false); // Re-enable the button
+        // If you want to close the form automatically, uncomment the line below:
+        // closeFeedbackForm();
+      }, 2000); // Reset after 2 seconds
     } catch (error) {
-      console.error("Error capturing screenshot:", error);
-      setCapturedImage(null);
+      console.error("Submit error:", error);
+      alert(`Error submitting feedback: ${error.message || error}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (!showFeedbackForm) return null;
 
   return (
-    <div ref={feedbackFormRef} className="fixed inset-y-0 right-0 w-full md:w-1/3 lg:w-1/4 xl:w-1/5 feedback-form-bg p-6 z-50 animate-slide-in-right flex flex-col space-y-6 rounded-l-xl">
+    <div ref={feedbackFormRef} className="fixed inset-y-0 right-0 w-full md:w-1/2 lg:w-1/3 xl:w-1/4 feedback-form-bg p-6 z-50 animate-slide-in-right flex flex-col space-y-6 rounded-l-xl">
       {/* Header */}
       <div className="flex justify-between items-center pb-4 border-b border-gray-700">
         <h2 className="text-xl font-normal text-white">Send feedback to Us</h2>
@@ -48,47 +74,33 @@ const FeedbackForm = ({ showFeedbackForm, closeFeedbackForm, capturedImage, setC
         </button>
       </div>
 
-      {/* Describe your feedback */}
+      {/* Feedback Text */}
       <div>
         <label htmlFor="feedback" className="block text-gray-300 text-sm font-medium mb-2">
           Describe your feedback (required)
         </label>
         <textarea
           id="feedback"
+          value={feedbackText}
+          onChange={(e) => setFeedbackText(e.target.value)}
           className="w-full h-32 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none placeholder-gray-500"
           placeholder="Tell us what prompted this feedback..."
-        ></textarea>
-        <p className="text-gray-500 text-xs mt-1">
-          Please don't include any sensitive information
+        />
+        <div className="flex items-center text-gray-500 text-xs mt-1"> {/* Changed from p to div with flex */}
+          <span>Please don't include any sensitive information</span>
           <span className="ml-1 cursor-help" title="Sensitive information includes passwords, financial details, and personal identification numbers.">
             &#9432;
           </span>
-        </p>
+        </div>
       </div>
 
-      {/* Captured Screenshot Display / Capture Button */}
-      {capturedImage ? (
-        <div className="flex flex-col items-center space-y-2">
-          <img src={capturedImage} alt="Captured Screenshot" className="max-w-full h-auto rounded-lg border border-gray-700" />
-          <button onClick={() => setCapturedImage(null)} className="py-2 px-4 bg-gray-700 text-gray-200 font-semibold rounded-lg hover:bg-gray-600 transition-colors duration-200">
-            Clear Screenshot
-          </button>
-        </div>
-      ) : (
-        <button onClick={handleCaptureScreenshot} className="w-full py-3 bg-gray-700 text-gray-200 font-semibold rounded-lg flex items-center justify-center space-x-2 hover:bg-gray-600 transition-colors duration-200">
-          {/* Desktop icon SVG */}
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20 18c1.1 0 1.99-.9 1.99-2L22 6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
-          </svg>
-          <span>Capture screenshot</span>
-        </button>
-      )}
-
-      {/* Checkbox for email updates */}
+      {/* Checkbox */}
       <div className="flex items-center mt-4">
         <input
           type="checkbox"
           id="emailUpdates"
+          checked={emailUpdates}
+          onChange={(e) => setEmailUpdates(e.target.checked)}
           className="form-checkbox h-6 w-6 text-blue-600 bg-gray-800 border-gray-700 rounded focus:ring-blue-500"
         />
         <label htmlFor="emailUpdates" className="ml-2 text-gray-300 text-sm font-semibold">
@@ -96,9 +108,17 @@ const FeedbackForm = ({ showFeedbackForm, closeFeedbackForm, capturedImage, setC
         </label>
       </div>
 
-      {/* Submit button (placeholder) */}
-      <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-auto">
-        Send
+      {/* Submit Button */}
+      <button
+        disabled={isSubmitting || feedbackSent} // Disable if submitting or already sent
+        onClick={handleSubmit}
+        className={`w-full py-3 font-medium rounded-lg transition-colors duration-200 mt-auto
+          ${isSubmitting || feedbackSent
+            ? 'bg-gray-600 text-gray-300 cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+          }`}
+      >
+        {isSubmitting ? "Sending..." : (feedbackSent ? "Feedback Sent!" : "Send")}
       </button>
     </div>
   );

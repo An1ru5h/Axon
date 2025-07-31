@@ -4,14 +4,12 @@ import FeedbackForm from './FeedbackForm';
 
 // Firebase imports
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, signInAnonymously } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signInAnonymously } from 'firebase/auth'; // Removed GoogleAuthProvider, signInWithPopup, signOut
 import { getFirestore } from 'firebase/firestore'; // Although not used for this specific request, good to include if Firestore is anticipated
 
 function App() {
-  const [showDropdown, setShowDropdown] = useState(false);
   const [showFeedbackForm, setShowFeedbackForm] = useState(false);
   const [capturedImage, setCapturedImage] = useState(null);
-  const dropdownRef = useRef(null);
 
   // State for Firebase user and auth/db instances
   const [user, setUser] = useState(null);
@@ -42,7 +40,7 @@ function App() {
       try {
         // Use global variables provided by the Canvas environment
         const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
-        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initialAuthToken : null;
 
         if (Object.keys(firebaseConfig).length === 0) {
           console.error("Firebase config is not defined. Please ensure __firebase_config is available.");
@@ -58,6 +56,8 @@ function App() {
 
         // Sign in with custom token if available, otherwise anonymously
         if (initialAuthToken) {
+          // signInWithCustomToken is used for Canvas environment authentication
+          // eslint-disable-next-line no-undef
           await signInWithCustomToken(authInstance, initialAuthToken);
         } else {
           await signInAnonymously(authInstance);
@@ -80,19 +80,6 @@ function App() {
     initializeFirebase();
   }, []); // Run only once on component mount
 
-  // Effect to handle clicks outside the dropdown
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setShowDropdown(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef]);
-
   // Effect to handle mouse movement for the custom cursor and trail
   useEffect(() => {
     const handleMouseMove = (event) => {
@@ -113,17 +100,7 @@ function App() {
     };
   }, [trailLength]);
 
-  const toggleDropdown = () => {
-    setShowDropdown(prev => !prev);
-  };
-
   const openFeedbackForm = async () => {
-    // Hide dropdown before capturing to ensure it's not in the screenshot
-    setShowDropdown(false);
-
-    // Give a small delay for the UI to update before capturing
-    await new Promise(resolve => setTimeout(resolve, 50));
-
     // The screenshot capture logic is now within FeedbackForm,
     // but we still trigger the form to show here.
     setShowFeedbackForm(true);
@@ -132,36 +109,6 @@ function App() {
   const closeFeedbackForm = () => {
     setShowFeedbackForm(false);
     setCapturedImage(null); // Clear captured image when form closes
-  };
-
-  // Google Sign-in function - This function is no longer called from the UI
-  const handleGoogleSignIn = async () => {
-    if (!auth) {
-      console.error("Firebase Auth is not initialized.");
-      return;
-    }
-    const provider = new GoogleAuthProvider();
-    try {
-      await signInWithPopup(auth, provider);
-      setShowDropdown(false); // Close dropdown after sign-in
-    } catch (error) {
-      console.error("Error during Google sign-in:", error);
-      // You might want to display a user-friendly message here
-    }
-  };
-
-  // Sign-out function
-  const handleSignOut = async () => {
-    if (!auth) {
-      console.error("Firebase Auth is not initialized.");
-      return;
-    }
-    try {
-      await signOut(auth);
-      setShowDropdown(false); // Close dropdown after sign-out
-    } catch (error) {
-      console.error("Error during sign-out:", error);
-    }
   };
 
   return (
@@ -273,14 +220,6 @@ function App() {
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        /* Dropdown menu glass style - Now similar to button */
-        .dropdown-glass-bg {
-          background: linear-gradient(to bottom right, rgba(255, 255, 255, 0.25), rgba(220, 220, 220, 0.15)); /* Matched button gradient */
-          backdrop-filter: blur(30px); /* Matched button blur */
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2); /* Matched button shadow */
-          border: none; /* Removed border */
-        }
-
         /* Feedback form slide-in animation */
         @keyframes slideInRight {
           from {
@@ -366,7 +305,7 @@ function App() {
           <img
             src="./Logo.png"
             alt="Company Logo"
-            className="w-14 h-14 rounded-full"
+            className="w-12 h-12 rounded-full"
             style={{ userSelect: 'none', WebkitUserDrag: 'none', MozUserSelect: 'none', msUserSelect: 'none' }}
             draggable="false"
             onError={(e) => { e.target.onerror = null; e.target.src='https://placehold.co/56x56/F3F4F6/000000?text=Co.'; }}
@@ -374,10 +313,10 @@ function App() {
         </div>
 
         {/* Icons moved to the top-right corner */}
-        <div className="fixed top-4 right-4 z-20 flex items-center space-x-4" ref={dropdownRef}>
+        <div className="fixed top-4 right-4 z-20 flex items-center space-x-4"> {/* Changed right-20 to right-4 */}
           {/*Discord icon*/}
           <div className="flex items-center justify-center w-10 h-10 rounded-md">
-            <a href="https://discord.com" target="_blank" rel="noopener noreferrer" aria-label="Visit us on Discord">
+            <a href="https://discord.gg/SvxwVpJ2" target="_blank" rel="noopener noreferrer" aria-label="Visit us on Discord">
               <img
                 src="./Discord.png" // Placeholder for Discord logo
                 alt="Discord Logo"
@@ -387,60 +326,18 @@ function App() {
             </a>
           </div>
 
-          {/* User Profile Photo or Three Dots Icon */}
+          {/* Feedback Icon - directly opens the feedback form */}
           <div
-            className="flex items-center justify-center w-12 h-12 rounded-full cursor-pointer overflow-hidden
-                       bg-gray-700 hover:bg-gray-600 transition-colors duration-200"
-            onClick={toggleDropdown}
-            title={user ? user.displayName || user.email : "Menu"}
+            className="flex items-center justify-center w-16 h-16 rounded-full cursor-pointer overflow-hidden
+                       transition-colors duration-200" // Increased size to w-16 h-16
+            onClick={openFeedbackForm}
+            title="Send app feedback"
           >
-            {/* Always display the three dots icon */}
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-              <circle cx="12" cy="5" r="2"/>
-              <circle cx="12" cy="12" r="2"/>
-              <circle cx="12" cy="19" r="2"/>
+            {/* Icon for Send app feedback */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="currentColor" viewBox="0 0 24 24"> {/* Increased SVG size */}
+              <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
             </svg>
           </div>
-
-          {/* Dropdown Menu */}
-          {showDropdown && (
-            <div className="absolute top-full right-0 mt-2 w-48 py-4 px-2 rounded-xl dropdown-glass-bg text-white text-left">
-              <ul className="space-y-3">
-                {user ? (
-                  <>
-                    <li className="flex items-center space-x-3 px-3 py-2 text-gray-300">
-                      <span className="truncate">{user.displayName || user.email || "Logged In"}</span>
-                    </li>
-                    <hr className="border-gray-600 my-1" />
-                    <li className="flex items-center space-x-3 cursor-pointer hover:text-gray-300 transition-colors duration-200 px-3 py-2" onClick={handleSignOut}>
-                      {/* Icon for Sign Out */}
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                      </svg>
-                      <span>Sign Out</span>
-                    </li>
-                  </>
-                ) : (
-                  // No "Not Logged In" message
-                  <></>
-                )}
-                <li className="flex items-center space-x-3 cursor-pointer hover:text-gray-300 transition-colors duration-200 px-3 py-2" onClick={openFeedbackForm}>
-                  {/* Icon for Send app feedback */}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
-                  </svg>
-                  <span>Send app feedback</span>
-                </li>
-                <li className="flex items-center space-x-3 cursor-pointer hover:text-gray-300 transition-colors duration-200 px-3 py-2">
-                  {/* Icon for FAQ */}
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.44 13.31 13 14 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
-                  </svg>
-                  <span>FAQ</span>
-                </li>
-              </ul>
-            </div>
-          )}
         </div>
 
         {/* Render the FeedbackForm component */}
