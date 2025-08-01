@@ -1,20 +1,31 @@
-# Node modules and build output
+# Dependency directories
 node_modules/
-build/
 
-# Environment variables
+# Build output
+build/
+dist/
+
+# Environment variables (never commit secrets)
 .env
-.env.local
+.env.*.local
 
 # Logs
-*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# OS files
+# OS-specific files
 .DS_Store
+Thumbs.db
 
-# Do NOT ignore config files like these
-# tailwind.config.js
-# postcss.config.js
-.vercel
-node_modules
-node_modules
+# Vercel deployment metadata
+.vercel/
+
+# Optional: Ignore editor/IDE config (if you're sure)
+.vscode/
+
+# Optional: Ignore coverage reports, temp files
+coverage/
+temp/
+*.tmp
