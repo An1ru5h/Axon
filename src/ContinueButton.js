@@ -38,7 +38,7 @@ const ContinueButton = () => {
         const user = auth.currentUser;
         const token = await user.getIdToken();
         console.log("User token:", token);
-        window.location.href = `https://o1axondashboard.web.app/dashboard/?token=${encodeURIComponent(token)}`;
+        window.location.href = `https://o1axondashboard.web.app/?token=${encodeURIComponent(token)}`;
       } catch (error) {
         console.error("Error getting token:", error);
       }
@@ -51,7 +51,7 @@ const ContinueButton = () => {
         if (user) {
           const token = await user.getIdToken();
           console.log("Token retrieved:", token);
-          window.location.href = `https://o1axondashboard.web.app/dashboard/?token=${encodeURIComponent(token)}`;
+          window.location.href = `https://o1axondashboard.web.app/?token=${encodeURIComponent(token)}`;
         }
       } catch (error) {
         console.error("Sign-in failed:", error);
